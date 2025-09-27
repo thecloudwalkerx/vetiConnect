@@ -8,17 +8,19 @@ import {
     TextInput,
     TouchableOpacity,
     Image,
+    Keyboard
 } from "react-native";
-import { useSignIn } from "@clerk/clerk-expo";
+import { useSignIn, useUser } from "@clerk/clerk-expo";
 import Toast from "react-native-toast-message";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 import CustomButton from "@/components/CustomButton";
 import { icons } from "@/constants";
-import { supabase } from "@/lib/supabase";   // ✅ to read the user’s role
+import { supabase } from "@/lib/supabase";
 
 export default function SignInScreen() {
     const { signIn, setActive, isLoaded } = useSignIn();
+    const { user } = useUser();                // ✅ will hold the active user after setActive
     const router = useRouter();
 
     const [email, setEmail] = useState("");
@@ -38,8 +40,8 @@ export default function SignInScreen() {
     };
 
     const onSignInPress = async () => {
-        if (!isLoaded) return;
-        if (!validateInputs()) return;
+        Keyboard.dismiss();
+        if (!isLoaded || !validateInputs()) return;
 
         try {
             const attempt = await signIn.create({
@@ -48,30 +50,42 @@ export default function SignInScreen() {
             });
 
             if (attempt.status === "complete") {
-                // ✅ Activate Clerk session
                 await setActive({ session: attempt.createdSessionId });
                 Toast.show({ type: "success", text1: "Login successful!" });
 
-                // ✅ Look up the user's role from Supabase
-                // attempt.createdUserId is the Clerk user id ("user_xxx")
-                const { data, error } = await supabase
-                    .from("profiles")
-                    .select("role")
-                    .eq("user_id", attempt.createdUserId)
-                    .single();
-
-                if (error || !data) {
-                    console.error("Error fetching role:", error);
-                    Toast.show({ type: "error", text1: "Could not determine user role" });
+                // ✅ After session is active, use Clerk user.id
+                const clerkUserId = user?.id;
+                if (!clerkUserId) {
+                    Toast.show({ type: "error", text1: "Could not read user ID from Clerk" });
                     return;
                 }
 
-                // ✅ Redirect based on role
-                if (data.role === "vet") {
-                    router.replace("/(vet-tabs)/home");
-                } else {
-                    router.replace("/(owner-tabs)/home");
+                // ✅ safer query: maybeSingle returns null if no row
+                const { data, error } = await supabase
+                    .from("profiles")
+                    .select("role")
+                    .eq("user_id", clerkUserId)
+                    .maybeSingle();
+
+                if (error) {
+                    Toast.show({ type: "error", text1: "Database error fetching role" });
+                    return;
                 }
+
+                if (!data) {
+                    // No profile row found – user hasn’t completed their profile yet
+                    Toast.show({
+                        type: "error",
+                        text1: "No profile found. Please complete your profile."
+                    });
+                    router.replace("/(auth)/complete-profile");
+                    return;
+                }
+
+                // ✅ Redirect based on stored role
+                router.replace(
+                    data.role === "vet" ? "/(vet-tabs)/home" : "/(owner-tabs)/home"
+                );
 
             } else {
                 Toast.show({
@@ -96,6 +110,7 @@ export default function SignInScreen() {
                        value,
                        onChangeText,
                        rightToggle,
+                       keyboardType = "default"
                    }: {
         label: string;
         placeholder: string;
@@ -104,6 +119,7 @@ export default function SignInScreen() {
         value: string;
         onChangeText: (v: string) => void;
         rightToggle?: React.ReactNode;
+        keyboardType?: "default" | "email-address" | "numeric" | "phone-pad";
     }) => (
         <View className="mb-4">
             <Text className="text-sm text-black mb-1">{label}</Text>
@@ -116,7 +132,10 @@ export default function SignInScreen() {
                     secureTextEntry={!!secure}
                     value={value}
                     onChangeText={onChangeText}
+                    keyboardType={keyboardType}
                     blurOnSubmit={false}
+                    onSubmitEditing={() => {}}
+                    returnKeyType="next"
                 />
                 {rightToggle}
             </View>
@@ -127,6 +146,7 @@ export default function SignInScreen() {
         <SafeAreaView className="flex-1 bg-[#0286FF]">
             <KeyboardAwareScrollView
                 enableOnAndroid
+                keyboardShouldPersistTaps="handled"
                 extraScrollHeight={20}
                 contentContainerStyle={{ flexGrow: 1, justifyContent: "flex-end" }}
             >
@@ -140,6 +160,7 @@ export default function SignInScreen() {
                         leftIcon={icons.email}
                         value={email}
                         onChangeText={setEmail}
+                        keyboardType="email-address"
                     />
 
                     <Field
@@ -175,7 +196,6 @@ export default function SignInScreen() {
                     </Text>
                 </View>
             </KeyboardAwareScrollView>
-
             <Toast />
         </SafeAreaView>
     );

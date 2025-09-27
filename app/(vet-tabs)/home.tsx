@@ -13,9 +13,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useUser } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import { icons } from "@/constants";
-import StatusButton from "@/components/StatusButton";  // ✅ new import
+import StatusButton from "@/components/StatusButton";  // ✅ Vet online/offline toggle
 
-export default function HomeScreen() {
+export default function VetHomeScreen() {
     const { user } = useUser();
     const router = useRouter();
 
@@ -23,7 +23,7 @@ export default function HomeScreen() {
         ? `${user.firstName || ""} ${user.lastName || ""}`.trim()
         : "Guest";
 
-    const location = "Your Location"; // Replace with Clerk metadata if available
+    const location = "Your Location"; // Replace with real metadata if needed
 
     const forumItems = [
         {
@@ -47,7 +47,6 @@ export default function HomeScreen() {
         <SafeAreaView className="flex-1 bg-gray-50">
             <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
 
-            {/* Fixed Top Section */}
             <View className="px-4 flex-none">
                 {/* 🔔 Header */}
                 <View
@@ -56,7 +55,6 @@ export default function HomeScreen() {
                         paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
                     }}
                 >
-                    {/* Profile Image */}
                     <TouchableOpacity onPress={() => router.push("/(vet-tabs)/profile")}>
                         <Image
                             source={{ uri: user?.imageUrl || "https://i.pravatar.cc/100" }}
@@ -64,7 +62,6 @@ export default function HomeScreen() {
                         />
                     </TouchableOpacity>
 
-                    {/* Name + Location */}
                     <TouchableOpacity
                         onPress={() => router.push("/(vet-tabs)/profile")}
                         className="flex-1 ml-3"
@@ -73,13 +70,12 @@ export default function HomeScreen() {
                         <Text className="text-xs text-gray-500">{location}</Text>
                     </TouchableOpacity>
 
-                    {/* Notification / Star */}
                     <TouchableOpacity>
                         <Image source={icons.star} className="w-6 h-6" />
                     </TouchableOpacity>
                 </View>
 
-                {/* ✅ Online Status Button (replaces search bar) */}
+                {/* ✅ Online Status Button */}
                 <View className="mb-6">
                     <StatusButton />
                 </View>
@@ -103,31 +99,19 @@ export default function HomeScreen() {
                         </View>
                     </TouchableOpacity>
 
-                    {/* Right Column */}
+                    {/* ✅ Right Column – New Messages */}
                     <View className="flex-1">
                         <TouchableOpacity
-                            className="bg-amber-500 rounded-xl p-4 mb-2"
-                            onPress={() => router.push("/wrong-route/prescriptions")}
-                        >
-                            <Text className="text-white text-xs mb-1">History</Text>
-                            <Text className="text-white font-bold text-sm">Prescriptions</Text>
-                            <View className="flex-row items-center mt-2">
-                                <Image source={icons.list} className="w-6 h-6 mr-2" />
-                                <Text className="text-white text-xs">View Records</Text>
-                            </View>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
                             className="bg-green-500 rounded-xl p-4"
-                            onPress={() => router.push("/wrong-route/medicine")}
+                            onPress={() => router.push("/(chat)/window")}
                         >
-                            <Text className="text-white text-xs mb-1">Shop</Text>
+                            <Text className="text-white text-xs mb-1">Chat</Text>
                             <Text className="text-white font-bold text-sm">
-                                Medicine Store
+                                New Messages
                             </Text>
                             <View className="flex-row items-center mt-2">
-                                <Image source={icons.list} className="w-6 h-6 mr-2" />
-                                <Text className="text-white text-xs">Buy Medicines</Text>
+                                <Image source={icons.chat} className="w-6 h-6 mr-2" />
+                                <Text className="text-white text-xs">Go to Chats</Text>
                             </View>
                         </TouchableOpacity>
                     </View>

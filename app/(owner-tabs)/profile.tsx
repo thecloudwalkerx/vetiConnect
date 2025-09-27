@@ -1,4 +1,4 @@
-// app/(user-tabs)/profile.tsx
+// app/(owner-tabs)/profile.tsx
 import {
     View,
     Text,

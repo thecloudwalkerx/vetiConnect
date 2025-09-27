@@ -1,4 +1,3 @@
-// app/(user-tabs)/home.tsx
 import React from "react";
 import {
     Text,
@@ -14,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useUser } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import { icons } from "@/constants";
+import SearchButton from "@/components/SearchButton";   // ✅ Search for vets
 
 export default function HomeScreen() {
     const { user } = useUser();
@@ -57,7 +57,7 @@ export default function HomeScreen() {
                     }}
                 >
                     {/* Profile Image */}
-                    <TouchableOpacity onPress={() => router.push("/(tabs)/profile")}>
+                    <TouchableOpacity onPress={() => router.push("/(owner-tabs)/profile")}>
                         <Image
                             source={{ uri: user?.imageUrl || "https://i.pravatar.cc/100" }}
                             className="w-12 h-12 rounded-full"
@@ -66,7 +66,7 @@ export default function HomeScreen() {
 
                     {/* Name + Location */}
                     <TouchableOpacity
-                        onPress={() => router.push("/(tabs)/profile")}
+                        onPress={() => router.push("/(owner-tabs)/profile")}
                         className="flex-1 ml-3"
                     >
                         <Text className="text-lg font-bold text-gray-800">{fullName}</Text>
@@ -79,21 +79,17 @@ export default function HomeScreen() {
                     </TouchableOpacity>
                 </View>
 
-                {/* 🔍 Search Button */}
-                <TouchableOpacity
-                    className="flex-row items-center bg-white rounded-xl px-4 py-3 mb-6 shadow-sm"
-                    onPress={() => router.push("/wrong-route/search-vets")}
-                >
-                    <Image source={icons.search} className="w-5 h-5 mr-2" />
-                    <Text className="text-base text-gray-500">Search for Vets</Text>
-                </TouchableOpacity>
+                {/* ✅ New Search Button – opens /match screen */}
+                <View className="mb-6">
+                    <SearchButton />
+                </View>
 
                 {/* 🟦 Bento Layout */}
                 <View className="flex-row mb-6">
-                    {/* Left Column */}
+                    {/* Left Column : Navigate to the new pet-tabs home */}
                     <TouchableOpacity
                         className="flex-1 bg-indigo-500 rounded-xl p-4 mr-2 justify-between"
-                        onPress={() => router.push("/wrong-route/pet-profile")}
+                        onPress={() => router.push("/(pet-tabs)/home")}
                     >
                         <View>
                             <Text className="text-white text-xs mb-1">Profile</Text>
@@ -123,7 +119,7 @@ export default function HomeScreen() {
 
                         <TouchableOpacity
                             className="bg-green-500 rounded-xl p-4"
-                            onPress={() => router.push("/wrong-route/medicine")}
+                            onPress={() => Linking.openURL("https://www.arogga.com/")}   // ✅ open external link
                         >
                             <Text className="text-white text-xs mb-1">Shop</Text>
                             <Text className="text-white font-bold text-sm">
@@ -134,6 +130,7 @@ export default function HomeScreen() {
                                 <Text className="text-white text-xs">Buy Medicines</Text>
                             </View>
                         </TouchableOpacity>
+
                     </View>
                 </View>
 

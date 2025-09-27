@@ -14,6 +14,9 @@ export default function RootLayout() {
                 <Stack.Screen name="(owner-tabs)" options={{ headerShown: false }} />
                 <Stack.Screen name="(profile)" options={{ headerShown: false }} />
                 <Stack.Screen name="api" options={{ headerShown: false }} />
+                <Stack.Screen name="(match)" options={{ headerShown: false }} />
+                <Stack.Screen name="(pet-tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="(chat)" options={{ headerShown: false }} />
             </Stack>
         </ClerkProvider>
     );

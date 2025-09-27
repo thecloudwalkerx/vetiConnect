@@ -1,4 +1,4 @@
-// app/(user-tabs)/session.tsx
+// app/(owner-tabs)/session.tsx
 import React, { useState } from "react";
 import {
     Text,

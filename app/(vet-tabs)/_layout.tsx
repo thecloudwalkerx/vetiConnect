@@ -99,15 +99,6 @@ export default function Layout() {
                         ),
                     }}
                 />
-
-                {/* ✅ Add the screen but hide it from the tab bar */}
-                <Tabs.Screen
-                    name="complete-profile"
-                    options={{
-                        // no tab bar button
-                        href: null,
-                    }}
-                />
             </Tabs>
         </>
     );
