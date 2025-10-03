@@ -5,9 +5,10 @@ import { useRouter } from "expo-router";
 
 /** 🔍 Fetch all online vets and combine details from profiles tables */
 async function fetchOnlineVets() {
+    // 1️⃣ Only take activity info that is still in vet_activity
     const { data: activities, error: activityError } = await supabase
         .from("vet_activity")
-        .select("user_id, is_verified, title, speciality")
+        .select("user_id, is_verified, title")   // ⬅️ removed speciality here
         .eq("is_online", true);
 
     if (activityError) throw new Error(activityError.message);
@@ -15,6 +16,7 @@ async function fetchOnlineVets() {
 
     const userIds = activities.map((a) => a.user_id);
 
+    // 2️⃣ Profiles table (basic info)
     const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("user_id, first_name, last_name, email")
@@ -22,13 +24,15 @@ async function fetchOnlineVets() {
 
     if (profilesError) throw new Error(profilesError.message);
 
+    // 3️⃣ Vet profile table (extended info, including speciality)
     const { data: vetProfiles, error: vetProfilesError } = await supabase
         .from("profile_vet")
-        .select("user_id, phone_number, certification_link")
+        .select("user_id, phone_number, certification_link, speciality") // ⬅️ speciality now here
         .in("user_id", userIds);
 
     if (vetProfilesError) throw new Error(vetProfilesError.message);
 
+    // 4️⃣ Merge everything
     return activities.map((act) => {
         const profile = profiles?.find((p) => p.user_id === act.user_id);
         const vetProfile = vetProfiles?.find((v) => v.user_id === act.user_id);
@@ -38,7 +42,7 @@ async function fetchOnlineVets() {
             lastName: profile?.last_name ?? "",
             email: profile?.email ?? "",
             title: act.title,
-            speciality: act.speciality,
+            speciality: vetProfile?.speciality ?? "",   // ⬅️ take from profile_vet
             phone: vetProfile?.phone_number ?? "",
             certificationLink: vetProfile?.certification_link ?? "",
             isVerified: act.is_verified,
@@ -109,7 +113,6 @@ export default function MatchScreen() {
                         <Text className="text-sm text-gray-500">📧 {item.email}</Text>
                         <Text className="text-sm text-gray-500 mb-3">📞 {item.phone}</Text>
 
-                        {/* 🟢 New Chat Now button */}
                         <TouchableOpacity
                             onPress={() =>
                                 router.push({

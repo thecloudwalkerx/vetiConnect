@@ -1,6 +1,5 @@
 import React, { useState, useRef } from "react";
 import {
-    SafeAreaView,
     View,
     Text,
     TextInput,
@@ -8,6 +7,7 @@ import {
     KeyboardAvoidingView,
     Platform,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useSignUp } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
@@ -27,51 +27,50 @@ export default function VerifyScreen() {
         if (!isLoaded || !signUp) return;
 
         try {
-            // ✅ Verify the 6-digit code sent by Clerk
+            // ✅ Verify the 6-digit code
             const attempt = await signUp.attemptEmailAddressVerification({
                 code: code.join(""),
             });
 
             if (attempt.status === "complete") {
-                // ✅ Activate the Clerk session
+                // ✅ Activate session
                 await setActive?.({ session: attempt.createdSessionId });
 
-                const userId = attempt.createdUserId;
-                const role   = (signUp.unsafeMetadata as any)?.role as "vet" | "owner" | undefined;
-                const first  = signUp.firstName || "";
-                const last   = signUp.lastName  || "";
-                const email  = signUp.emailAddress || "";
+                // ✅ Clerk sometimes returns null → enforce string
+                const userId: string = attempt.createdUserId ?? "";
+                if (!userId) {
+                    console.error("No userId returned from Clerk after verification.");
+                    return;
+                }
 
-                // ✅ Insert into Supabase through the correct API
+                // ✅ Get role and user data with fallbacks
+                const role =
+                    (signUp.unsafeMetadata as { role?: "vet" | "owner" })?.role ?? "owner";
+                const first: string = signUp.firstName ?? "";
+                const last: string = signUp.lastName ?? "";
+                const email: string = signUp.emailAddress ?? "";
+
+                // ✅ Insert into Supabase
                 if (role === "vet") {
                     await createVetInDatabase({
                         userId,
                         firstName: first,
-                        lastName:  last,
+                        lastName: last,
                         email,
                     });
                 } else {
                     await createUserInDatabase({
                         userId,
                         firstName: first,
-                        lastName:  last,
+                        lastName: last,
                         email,
                     });
                 }
 
                 Toast.show({ type: "success", text1: "Verification successful!" });
 
-                /**
-                 * ✅ Important change:
-                 * Instead of sending vets straight to their home,
-                 * redirect everyone back to the app root.
-                 * The root (index.tsx) now checks:
-                 *   – role
-                 *   – whether profile_vet exists
-                 * and decides whether to show complete-profile or home.
-                 */
+                // ✅ Redirect to root → let index.tsx decide
                 router.replace("/");
-
             } else {
                 Toast.show({
                     type: "error",
@@ -104,7 +103,9 @@ export default function VerifyScreen() {
                         {code.map((digit, i) => (
                             <TextInput
                                 key={i}
-                                ref={(el) => { inputs.current[i] = el; }}
+                                ref={(el) => {
+                                    inputs.current[i] = el;
+                                }}
                                 maxLength={1}
                                 keyboardType="numeric"
                                 className="border-b-2 border-[#0286FF] text-center text-xl text-black w-11"
@@ -118,11 +119,7 @@ export default function VerifyScreen() {
                                     }
                                 }}
                                 onKeyPress={({ nativeEvent }) => {
-                                    if (
-                                        nativeEvent.key === "Backspace" &&
-                                        !code[i] &&
-                                        i > 0
-                                    ) {
+                                    if (nativeEvent.key === "Backspace" && !code[i] && i > 0) {
                                         inputs.current[i - 1]?.focus();
                                     }
                                 }}
@@ -135,7 +132,9 @@ export default function VerifyScreen() {
                     </Text>
                     <TouchableOpacity
                         onPress={() =>
-                            signUp?.prepareEmailAddressVerification({ strategy: "email_code" })
+                            signUp?.prepareEmailAddressVerification({
+                                strategy: "email_code",
+                            })
                         }
                     >
                         <Text className="text-center font-semibold text-[#0286FF] mt-1">

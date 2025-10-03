@@ -1,9 +1,9 @@
-import { View, Text, TouchableOpacity, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import React, { useRef, useState } from 'react';
-import { router } from 'expo-router';
-import Swiper from 'react-native-swiper';
-import { onboardingContent } from '@/constants';
+import { View, Text, TouchableOpacity, Image } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context"; // ✅ correct import
+import React, { useRef, useState } from "react";
+import { router } from "expo-router";
+import Swiper from "react-native-swiper";
+import { onboardingContent } from "@/constants";
 import CustomButton from "@/components/CustomButton";
 
 const Onboarding = () => {
@@ -13,11 +13,14 @@ const Onboarding = () => {
     const isLastSlide = activeIndex === onboardingContent.length - 1;
 
     return (
-        <SafeAreaView className="flex h-full items-center justify-between bg-white">
+        <SafeAreaView
+            className="flex h-full items-center justify-between bg-white"
+            edges={["top", "bottom"]} // ✅ ensures top & bottom insets are respected
+        >
             {/* Skip button */}
             <TouchableOpacity
                 onPress={() => {
-                    router.replace('/(auth)/sign-up');
+                    router.replace("/(auth)/sign-up");
                 }}
                 className="w-full flex justify-end items-end p-5"
             >
@@ -28,19 +31,12 @@ const Onboarding = () => {
             <Swiper
                 ref={swiperRef}
                 loop={false}
-                dot={
-                    <View className="w-[32px] h-[4px] mx-1 bg-[#E2E8F0] rounded-full" />
-                }
-                activeDot={
-                    <View className="w-[32px] h-[4px] mx-1 bg-[#0286FF] rounded-full" />
-                }
+                dot={<View className="w-[32px] h-[4px] mx-1 bg-[#E2E8F0] rounded-full" />}
+                activeDot={<View className="w-[32px] h-[4px] mx-1 bg-[#0286FF] rounded-full" />}
                 onIndexChanged={(index) => setActiveIndex(index)}
             >
                 {onboardingContent.map((item) => (
-                    <View
-                        key={item.id}
-                        className="flex-1 items-center justify-start p-5"
-                    >
+                    <View key={item.id} className="flex-1 items-center justify-start p-5">
                         <Image
                             source={item.image}
                             style={{ height: 380, width: 280 }}
@@ -60,7 +56,7 @@ const Onboarding = () => {
                         ? router.replace("/(auth)/sign-up")
                         : swiperRef.current?.scrollBy(1)
                 }
-                className="w-11/12 mt-10 mb-5"
+                className="mt-10 mb-5"
             />
         </SafeAreaView>
     );

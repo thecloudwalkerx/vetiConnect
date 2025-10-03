@@ -69,7 +69,7 @@ export default function Index() {
     // Signed in -> redirect according to role & profile status
     if (role === "vet") {
         return needsVetProfile
-            ? <Redirect href="/(auth)/complete-profile" />
+            ? <Redirect href="/(auth)/complete-vet" />
             : <Redirect href="/(vet-tabs)/home" />;
     }
 

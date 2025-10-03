@@ -1,22 +1,23 @@
 import { Link, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
-    SafeAreaView,
     View,
     Text,
     TextInput,
-    TouchableOpacity,
     Image,
+    ScrollView,
+    RefreshControl,
+    Pressable,
 } from "react-native";
-import { useSignUp } from "@clerk/clerk-expo";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { useSignUp, useUser } from "@clerk/clerk-expo";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import OAuth from "@/components/OAuth";
 import CustomButton from "@/components/CustomButton";
 import { icons } from "@/constants";
 
 export default function SignUpScreen() {
     const { signUp, isLoaded } = useSignUp();
+    const { user } = useUser();
     const router = useRouter();
 
     const [firstName, setFirstName] = useState("");
@@ -24,48 +25,35 @@ export default function SignUpScreen() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPwd, setShowPwd] = useState(false);
-
-    // 👇 NEW: store Vet / Owner selection
     const [role, setRole] = useState<"vet" | "owner" | "">("");
 
-    const validateInputs = () => {
-        if (!firstName || !lastName) {
-            alert("First and last name are required");
-            return false;
-        }
-        if (!role) {
-            alert("Please select whether you are a Vet or an Owner");
-            return false;
-        }
-        if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-            alert("Invalid email format");
-            return false;
-        }
-        if (password.length < 6) {
-            alert("Password must be at least 6 characters");
-            return false;
-        }
-        return true;
-    };
+    // Track validation errors
+    const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
+    const [refreshing, setRefreshing] = useState(false);
 
     const onSignUpPress = async () => {
         if (!isLoaded) return;
-        if (!validateInputs()) return;
+
+        const newErrors: any = {};
+        if (!firstName) newErrors.firstName = true;
+        if (!lastName) newErrors.lastName = true;
+        if (!email) newErrors.email = true;
+        if (!password) newErrors.password = true;
+        if (!role) newErrors.role = true;
+        setErrors(newErrors);
+
+        if (Object.keys(newErrors).length > 0) return;
 
         try {
-            // ➡ Create Clerk user and attach the chosen role in unsafeMetadata
             await signUp.create({
                 firstName,
                 lastName,
                 emailAddress: email,
                 password,
-                unsafeMetadata: { role }, // ✅ store selected role
+                unsafeMetadata: { role },
             });
 
-            // ➡ Trigger email OTP
             await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
-
-            // ➡ Go to verification screen
             router.replace("/verify");
         } catch (err: any) {
             console.error("Sign-up error:", err);
@@ -73,8 +61,25 @@ export default function SignUpScreen() {
         }
     };
 
-    // ---------- Small reusable components ----------
+    // ---------- Pull to refresh ----------
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
 
+        if (user) {
+            const role = (user.unsafeMetadata?.role as "vet" | "owner") || null;
+            if (role === "vet") {
+                router.replace("/(vet-tabs)/home");
+            } else if (role === "owner") {
+                router.replace("/(owner-tabs)/home");
+            } else {
+                router.replace("/(auth)/complete-vet");
+            }
+        }
+
+        setRefreshing(false);
+    }, [user, router]);
+
+    // ---------- Field ----------
     const Field = ({
                        label,
                        placeholder,
@@ -83,6 +88,7 @@ export default function SignUpScreen() {
                        value,
                        onChangeText,
                        rightToggle,
+                       errorKey,
                    }: {
         label: string;
         placeholder: string;
@@ -91,52 +97,61 @@ export default function SignUpScreen() {
         value: string;
         onChangeText: (v: string) => void;
         rightToggle?: React.ReactNode;
+        errorKey: string;
     }) => (
         <View className="mb-4">
             <Text className="text-sm text-black mb-1">{label}</Text>
-            <View className="flex-row items-center bg-gray-50 rounded-xl border border-gray-300 px-3">
+            <View
+                className={`flex-row items-center rounded-xl border px-3 ${
+                    errors[errorKey]
+                        ? "border-red-500 bg-red-50"
+                        : "border-gray-300 bg-gray-50"
+                }`}
+            >
                 <Image source={leftIcon} className="w-5 h-5 opacity-70" />
                 <TextInput
                     className="flex-1 ml-2 py-2 text-base text-black"
                     placeholder={placeholder}
                     placeholderTextColor="#9CA3AF"
-                    secureTextEntry={!!secure}
+                    secureTextEntry={secure}
                     value={value}
                     onChangeText={onChangeText}
-                    blurOnSubmit={false}
                 />
                 {rightToggle}
             </View>
         </View>
     );
 
+    // ---------- Role Button ----------
     const RoleButton = ({ value, label }: { value: "vet" | "owner"; label: string }) => (
-        <TouchableOpacity
+        <Pressable
             onPress={() => setRole(value)}
             className={`px-4 py-2 mr-3 rounded-xl border ${
-                role === value ? "bg-[#0286FF] border-[#0286FF]" : "border-gray-300"
+                role === value
+                    ? "bg-[#0286FF] border-[#0286FF]"
+                    : errors.role
+                        ? "border-red-500"
+                        : "border-gray-300"
             }`}
         >
             <Text className={`${role === value ? "text-white" : "text-black"}`}>
                 {label}
             </Text>
-        </TouchableOpacity>
+        </Pressable>
     );
 
-    // ---------- Screen Layout ----------
+    // ---------- Layout ----------
     return (
         <SafeAreaView className="flex-1 bg-[#0286FF]">
-            <KeyboardAwareScrollView
-                enableOnAndroid={true}
-                extraScrollHeight={20}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-                bounces={false}
+            <ScrollView
                 contentContainerStyle={{ flexGrow: 1, justifyContent: "flex-end" }}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }
             >
-                <View className="bg-white rounded-t-3xl px-5 py-10">
+                <View className="bg-white rounded-t-3xl px-5 py-24">
                     <Text className="text-2xl font-bold text-black">Register</Text>
-                    <Text className="text-gray-500 mt-2 mb-6">
+                    <Text className="text-gray-500 mt-2 mb-2">
                         Please register before login
                     </Text>
 
@@ -146,6 +161,7 @@ export default function SignUpScreen() {
                         leftIcon={icons.person}
                         value={firstName}
                         onChangeText={setFirstName}
+                        errorKey="firstName"
                     />
 
                     <Field
@@ -154,6 +170,7 @@ export default function SignUpScreen() {
                         leftIcon={icons.person}
                         value={lastName}
                         onChangeText={setLastName}
+                        errorKey="lastName"
                     />
 
                     <Field
@@ -162,6 +179,7 @@ export default function SignUpScreen() {
                         leftIcon={icons.email}
                         value={email}
                         onChangeText={setEmail}
+                        errorKey="email"
                     />
 
                     <Field
@@ -171,25 +189,31 @@ export default function SignUpScreen() {
                         secure={!showPwd}
                         value={password}
                         onChangeText={setPassword}
+                        errorKey="password"
                         rightToggle={
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={() => setShowPwd((s) => !s)}
                                 className="p-2"
                                 hitSlop={10}
                             >
-                                <Image
-                                    source={icons.eyecross}
-                                    className="w-5 h-5 opacity-70"
-                                />
-                            </TouchableOpacity>
+                                <Image source={icons.eyecross} className="w-5 h-5 opacity-70" />
+                            </Pressable>
                         }
                     />
 
-                    {/* ✅ NEW: Role selector */}
-                    <Text className="text-sm text-black mb-1">I am a*</Text>
-                    <View className="flex-row mb-4">
-                        <RoleButton value="vet" label="Vet" />
-                        <RoleButton value="owner" label="Owner" />
+                    {/* Role selector */}
+                    <View className="mb-4">
+                        <Text className="text-sm text-black mb-1">I am a*</Text>
+                        <View
+                            className={`flex-row rounded-xl px-2 py-2 ${
+                                errors.role
+                                    ? "border border-red-500 bg-red-50"
+                                    : "border border-transparent"
+                            }`}
+                        >
+                            <RoleButton value="vet" label="Vet" />
+                            <RoleButton value="owner" label="Owner" />
+                        </View>
                     </View>
 
                     <CustomButton
@@ -197,7 +221,6 @@ export default function SignUpScreen() {
                         onPress={onSignUpPress}
                         className="mt-6 h-16 rounded-2xl justify-center"
                     />
-                    <OAuth />
 
                     <Text className="text-center text-gray-500 mt-5">
                         Already have an account?{" "}
@@ -206,7 +229,7 @@ export default function SignUpScreen() {
                         </Link>
                     </Text>
                 </View>
-            </KeyboardAwareScrollView>
+            </ScrollView>
         </SafeAreaView>
     );
 }

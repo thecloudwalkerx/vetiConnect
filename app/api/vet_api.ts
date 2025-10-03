@@ -64,7 +64,7 @@ export async function createVetProfile(profileData: {
             throw new Error(`Error inserting vet profile: ${profileError.message}`);
         }
 
-        // 2️⃣ Insert into vet_activity
+        // 2️⃣ Insert into vet_activity (❌ no speciality here)
         const { error: activityError } = await supabase.from("vet_activity").insert([
             {
                 user_id: profileData.userId,
@@ -90,10 +90,7 @@ export async function createVetProfile(profileData: {
 }
 
 /**
- * ✅ NEW:
- * Toggle or set the vet's online status in vet_activity.
- * @param userId   Clerk user id (must match profiles.user_id)
- * @param isOnline Desired status (true or false)
+ * ✅ Toggle or set the vet's online status in vet_activity.
  */
 export async function updateVetOnlineStatus(userId: string, isOnline: boolean) {
     try {
