@@ -1,50 +1,92 @@
-# Onboarding to your Expo app 👋
+![VetiConnect Banner](https://raw.githubusercontent.com/thecloudwalkerx/vetiConnect/main/VetiConnect.png)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+# 🐾 VetiConnect: Online Veterinary Service Platform and Consultation
 
-## Get started
+VetiConnect is a mobile veterinary platform designed to improve access to quality animal care in Bangladesh. It connects pet owners with **verified vets** through real-time **video consultations**, enabling freelance practitioners to offer their services. Users can get online prescriptions, book appointments, and safely manage payments via an integrated wallet.
 
-1. Install dependencies
+Developed by a group of computer science students from Southeast University, this project aims to boost trust, accessibility, and professionalism in Bangladesh's veterinary sector.
 
-   ```bash
-   npm install
-   ```
+---
 
-2. Start the app
+## 🛠️ Technology Stack
 
-   ```bash
-   npx expo start
-   ```
+VetiConnect is built using modern, mobile-first technologies:
 
-In the output, you'll find options to open the app in a
+* **Frontend:** **React Native (Expo)**
+* **Backend & Database:** **Supabase**
+* **Authentication:** **Clerk**
+* **Language:** **TypeScript**
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+---
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 🚀 Get Started
 
-## Get a fresh project
+This project was initialized using `create-expo-app`. Follow these steps to set up and run the application locally.
 
-When you're ready, run:
+### Prerequisites
+
+You need **Node.js** and **npm** installed on your system.
+
+### Installation
+
+1.  **Clone the Repository:**
+    ```bash
+    git clone [Your Repository URL Here]
+    cd [Your Project Directory]
+    ```
+
+2.  **Install Dependencies:**
+    ```bash
+    npm install
+    ```
+
+### Running the App
+
+Start the Expo development server:
+
+```bash
+npx expo start
+```
+
+This command will open a new tab in your browser with the Metro Bundler dashboard, presenting you with several options to run the app:
+
+* **Development Build:** Requires a custom development client (recommended for advanced features).
+* **Android Emulator:** Opens the app in a configured Android emulator.
+* **iOS Simulator:** Opens the app in a configured iOS simulator.
+* **Expo Go:** Opens the app in the **Expo Go** app on your physical device (limited sandbox environment).
+
+You can begin developing by editing the files inside the `app` directory. This project uses **file-based routing**.
+
+---
+
+## ✨ Fresh Project Development
+
+If you wish to remove the starter code and begin development with a blank slate, run the following command:
 
 ```bash
 npm run reset-project
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+> **Note:** This command will move the existing starter code to the `app-example` directory and create an empty `app` directory for new development.
 
-## Learn more
+---
 
-To learn more about developing your project with Expo, look at the following resources:
+## 📚 Learn More
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+To dive deeper into the tools used in this project, explore the following resources:
 
-## Join the community
+* **Expo documentation:** Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev).
+* **Learn Expo tutorial:** Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+* **Supabase Documentation:** [https://supabase.com/docs](https://supabase.com/docs)
+* **Clerk Authentication Docs:** [https://clerk.com/docs](https://clerk.com/docs)
+
+---
+
+## 💬 Join the Community
 
 Join our community of developers creating universal apps.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+* **Expo on GitHub:** View our [open source platform and contribute](https://github.com/expo/expo).
+* **Discord community:** [Chat with Expo users and ask questions](https://chat.expo.dev).
+
+<!-- end list -->
